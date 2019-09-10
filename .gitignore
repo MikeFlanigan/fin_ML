@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# so data files don't get uploaded for now
+*.csv
+ 
 # C extensions
 *.so
 
