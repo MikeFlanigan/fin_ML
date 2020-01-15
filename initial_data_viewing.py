@@ -4,6 +4,7 @@ import datetime as dt
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import pickle
+
 ##filename = 'EURUSD_GMT+0_NO-DST.csv'
 ##filename = 'EURUSD_GMT+0_NO-DST1.csv'
 filename = 'EURUSD_GMT_ts_bid_ask_5-4-02--9-9-19.csv' # this is like 11 GB so be careful
