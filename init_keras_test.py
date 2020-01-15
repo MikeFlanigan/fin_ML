@@ -79,12 +79,14 @@ trainX = trainX[0:train_size,:,:]
 testY = trainY[train_size:]
 trainY = trainY[0:train_size]
 
-epochs = 40
+loss_hist = []
+epochs = 50
 for e in range(epochs):
     print('epoch: ',e,'/',str(epochs))
     var_trainX = trainX[e,np.random.randint(3):sequence_length-np.random.randint(3),:]
 ##    model.fit(trainX, trainY, epochs=1, batch_size=1, verbose=2)
-    model.fit(trainX, trainY, steps_per_epoch=30, epochs=1, verbose=2)
+    e_hist = model.fit(trainX, trainY, steps_per_epoch=30, epochs=1, verbose=2)
+    loss_hist.append(e_hist.history['loss'][0])
 
 ##model.fit(trainX, trainY, epochs=100, batch_size=8, verbose=2)
 ##model.fit(trainX, trainY, steps_per_epoch=30, epochs=100, verbose=2)
@@ -97,6 +99,13 @@ outs[preds[:,0]>0.5] = 1
 ##plt.plot(range(X_train[0,train_size-30:train_size].shape[0],X_train[0,train_size-30:train_size].shape[0]+len(outs)),X_train[train_size:],'kx')
 ##plt.plot(range(X_train[0,train_size-30:train_size].shape[0],X_train[0,train_size-30:train_size].shape[0]+len(outs)),outs,'ro')
 
+plt.figure(1)
+plt.plot(loss_hist)
+plt.xlabel('epoch')
+plt.ylabel('train loss')
+
+
+plt.figure(2)
 plt.plot(testY[:,0],'bo-')
 plt.plot(outs,'kx')
 plt.show()
