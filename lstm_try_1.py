@@ -35,8 +35,8 @@ if  user_load =='yes':
 elif user_load =='no':
     print('compiling a new model')
     model = Sequential()
-    model.add(LSTM(4, return_sequences=False, input_shape=(None, 1))) # variable input length x 1 feature
-    model.add(Dense(4, activation='relu'))
+    model.add(LSTM(14, return_sequences=False, input_shape=(None, 1))) # variable input length x 1 feature
+    model.add(Dense(10, activation='relu'))
     model.add(Dense(3, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy',
@@ -51,6 +51,11 @@ try:
     look_back = 30 # minutes 
     label_look_ahead = 1 # minutes ahead to predict
     pip_thresh = 0.0002 # pip delta threshold # ------ this feels a little small, but it helps even the class distributions
+    
+    
+    trained_ups = 0
+    trained_downs = 0
+    trained_stays = 0
     
     finished_2018 = False
     c = 0
@@ -68,17 +73,14 @@ try:
         
         if c % 1 == 0:
             print(time_parse(chunk.loc[chunk.index[0],'Date']))
-            print('chunks: ',c,' micros:',ems,' total: ',(dt.datetime.now()-init_timer))
+            print('chunks: ',c,' micros:',ems,' total run time so far: ',(dt.datetime.now()-init_timer))
             print(' ')
             
         
         # chunk statistics
         chunk_ups = 0
-        trained_ups = 0
         chunk_downs = 0
-        trained_downs = 0
         chunk_stays = 0
-        trained_stays = 0
         
         seq_found_flag = False
         seq_start_ind = chunk.index[0]
@@ -125,16 +127,17 @@ try:
             if seq_found_flag and x_train.shape[0] < 1000:
                 continue # assuming this is a periodic sunday problem
             
-            if y_train[0]:
-                if trained_ups > trained_downs + 10 or trained_ups > trained_stays + 10:
+            class_imbalance_tolerance = 100
+            if y_train[0]==0:
+                if trained_ups > trained_downs + class_imbalance_tolerance or trained_ups > trained_stays + class_imbalance_tolerance:
                     continue # don't train or will create a class distribution imbalance
                 else: trained_ups += 1
-            elif y_train[1]:
-                if trained_downs > trained_ups + 10 or trained_downs > trained_stays + 10:
+            elif y_train[0]==1:
+                if trained_downs > trained_ups + class_imbalance_tolerance or trained_downs > trained_stays + class_imbalance_tolerance:
                     continue # don't train or will create a class distribution imbalance
                 else: trained_downs += 1
-            elif y_train[2]:
-                if trained_stays > trained_ups + 10 or trained_stays > trained_downs + 10:
+            elif y_train[0]==2:
+                if trained_stays > trained_ups + class_imbalance_tolerance or trained_stays > trained_downs + class_imbalance_tolerance:
                     continue # don't train or will create a class distribution imbalance
                 else: trained_stays += 1
             else: print('unexpected error')
@@ -194,6 +197,7 @@ try:
         print('pip increases:',chunk_ups)
         print('pip decreases:',chunk_downs)
         print('pip stays:',chunk_stays)
+        print('total trained up:',trained_ups,' downs:',trained_downs,' stays:',trained_stays)
         # ~ time.sleep(3)
         
         if finished_2018:
