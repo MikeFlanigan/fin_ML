@@ -74,8 +74,11 @@ try:
         
         # chunk statistics
         chunk_ups = 0
+        trained_ups = 0
         chunk_downs = 0
+        trained_downs = 0
         chunk_stays = 0
+        trained_stays = 0
         
         seq_found_flag = False
         seq_start_ind = chunk.index[0]
@@ -121,6 +124,20 @@ try:
             
             if seq_found_flag and x_train.shape[0] < 1000:
                 continue # assuming this is a periodic sunday problem
+            
+            if y_train[0]:
+                if trained_ups > trained_downs + 10 or trained_ups > trained_stays + 10:
+                    continue # don't train or will create a class distribution imbalance
+                else: trained_ups += 1
+            elif y_train[1]:
+                if trained_downs > trained_ups + 10 or trained_downs > trained_stays + 10:
+                    continue # don't train or will create a class distribution imbalance
+                else: trained_downs += 1
+            elif y_train[2]:
+                if trained_stays > trained_ups + 10 or trained_stays > trained_downs + 10:
+                    continue # don't train or will create a class distribution imbalance
+                else: trained_stays += 1
+            else: print('unexpected error')
             
             y_train = np.reshape(to_categorical(y_train)[0,:],(1,3))
             x_train = np.reshape(x_train,(1,len(x_train),1))
@@ -185,7 +202,7 @@ try:
         c += 1
 except KeyboardInterrupt: pass
 
-if input('Save model? [yes] [no]') =='yes' or if finished_2018:
+if input('Save model? [yes] [no]') =='yes' or finished_2018:
     # save model and architecture to single file
     model.save("fin_ml_model.h5")
     print("Saved model to disk")
