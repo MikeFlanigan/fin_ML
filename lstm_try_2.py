@@ -30,15 +30,16 @@ def time_parse(time_string):
 user_load = input('Load model from disk? [yes] [no]')
 if  user_load =='yes':
     # save model and architecture to single file
-    model = load_model("fin_ml_model.h5")
+    model = load_model("bigger_fin_ml_model.h5")
     model.summary()
 elif user_load =='no':
     print('compiling a new model')
     model = Sequential()
-    model.add(LSTM(140, return_sequences=False, input_shape=(None, 1))) # variable input length x 1 feature
+    model.add(LSTM(25, return_sequences=True, input_shape=(None, 1))) # variable input length x 1 feature
     model.add(Dropout(0.2))
-    model.add(Dense(50, activation='relu'))
+    model.add(LSTM(25,return_sequences=False))
     model.add(Dropout(0.2))
+    model.add(Dense(10, activation='relu'))
     model.add(Dense(3, activation='softmax'))
 
     model.compile(loss='categorical_crossentropy',
@@ -50,7 +51,7 @@ else:
 try:
     chunksize = 20000 # how many rows of data to load at once, can load thousands at a time
     
-    look_back = 5 # minutes 
+    look_back = 30 # minutes 
     label_look_ahead = 1 # minutes ahead to predict
     pip_thresh = 0.0002 # pip delta threshold # ------ this feels a little small, but it helps even the class distributions
     
@@ -94,7 +95,7 @@ try:
             # ~ print('r:',r,' seq_start_ind:',seq_start_ind)
             # ~ print((time_parse(chunk.loc[r,'Date']) - seq_init_time).seconds)
             # ~ if loop_count > 3: break
-            if (time_parse(chunk.loc[r,'Date']) - seq_init_time).seconds >= 60*(look_back+10): # 45 minutes is too much, really looking for sunday big changes
+            if (time_parse(chunk.loc[r,'Date']) - seq_init_time).seconds >= 60*45: # 45 minutes is too much, really looking for sunday big changes
                 seq_start_ind += 1 # move the tail of window up
                 # ~ print('too long')
                 continue # don't evaluate anything else
@@ -126,7 +127,7 @@ try:
                 y_train = [2,2] # pip stayed the same within tolerance
                 chunk_stays += 1
             
-            if seq_found_flag and x_train.shape[0] < 750:
+            if seq_found_flag and x_train.shape[0] < 1000:
                 continue # assuming this is a periodic sunday problem
             
             class_imbalance_tolerance = 100
@@ -210,7 +211,7 @@ except KeyboardInterrupt: pass
 
 if input('Save model? [yes] [no]') =='yes' or finished_2018:
     # save model and architecture to single file
-    model.save("fin_ml_model.h5")
+    model.save("bigger_fin_ml_model.h5")
     print("Saved model to disk")
 
 
